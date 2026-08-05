@@ -1,0 +1,19 @@
+project:
+  root: /path/to/local/project
+  output_dir: /path/to/output
+references:
+  t2t_chm13_fasta: /path/to/T2T-CHM13v2.0.fasta
+  grch38_fasta: /path/to/GRCh38.fasta
+  annotation_gtf: /path/to/annotation.gtf
+inputs:
+  authorized_data_dir: /path/to/authorized/input
+  deidentified_sample_manifest: /path/to/deidentified_samples.tsv
+resources:
+  threads: 4
+  memory_gb: 16
+cluster:
+  partition: YOUR_PARTITION
+  account: YOUR_ACCOUNT
+privacy:
+  controlled_data: true
+  allow_network_access: false

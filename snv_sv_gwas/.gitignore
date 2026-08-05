@@ -1,0 +1,14 @@
+results/
+logs/
+*.log
+*.Rout
+.Rhistory
+.RData
+.DS_Store
+*.tmp
+*.bed
+*.bim
+*.fam
+*.nosex
+*.clumped
+*.hh

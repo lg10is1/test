@@ -1,0 +1,4 @@
+# stringtie -e -G synthetic_reference.gtf
+chrSYN	synthetic	transcript	100	299	.	+	.	gene_id "SYN_GENE_A"; transcript_id "SYN_TX_A"; gene_name "SYNTHETIC_A"; cov "2.0";
+chrSYN	synthetic	exon	100	199	.	+	.	gene_id "SYN_GENE_A"; transcript_id "SYN_TX_A";
+chrSYN	synthetic	exon	250	299	.	+	.	gene_id "SYN_GENE_A"; transcript_id "SYN_TX_A";
