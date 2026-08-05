@@ -125,7 +125,7 @@ Module-specific commands are documented in:
 
 ## Outputs
 
-Outputs include assemblies, alignment files, variant calls, genotype matrices, methylation matrices, expression phenotypes, association statistics, burden results, and figures. Direct outputs and scheduler logs to project-specific output directories; generated data and logs are excluded by `.gitignore`.
+Outputs include assemblies, alignment files, variant calls, genotype matrices, methylation matrices, expression phenotypes, association statistics, burden results, and figures. Direct outputs and scheduler logs to project-specific output directories.
 
 ## License
 Code in this repository is released under the MIT License.
