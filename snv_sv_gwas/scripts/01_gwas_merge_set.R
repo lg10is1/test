@@ -2,7 +2,7 @@ library(data.table)
 library(qqman)
 
 # ============================================================
-# 0.       
+# 0. Configuration
 # ============================================================
 
 edge_bp <- 1e6
@@ -19,7 +19,7 @@ files <- c(
 )
 
 # ============================================================
-# 1.          
+# 1. T2T-CHM13 chromosome lengths
 # ============================================================
 
 chr_lengths <- data.table(
@@ -34,7 +34,7 @@ chr_lengths <- data.table(
 )
 
 # ============================================================
-# 2.       
+# 2. Helper functions
 # ============================================================
 
 calc_lambda <- function(p) {
@@ -93,45 +93,45 @@ process_gwas <- function(file_path, set_name, chr_lengths, edge_bp, out_dir) {
   
   if (length(missing_cols) > 0) {
     stop(
-      "          ? ",
+      "Missing required columns: ",
       paste(missing_cols, collapse = ", "),
       "\n   : ",
       file_path
     )
   }
   
-  #     CHR    
+  # Standardize chromosome labels and retain autosomes.
   dt[, CHR := as.character(CHR)]
   dt[, CHR := sub("^chr", "", CHR, ignore.case = TRUE)]
   n_before_autosome <- nrow(dt)
   dt <- dt[CHR %in% as.character(1:22)]
   message("[AUTOSOME] ", set_name, ": kept ", nrow(dt), " / ", n_before_autosome, " rows on chr1-22")
   
-  #           ?  dt[, POS := as.numeric(POS)]
+  dt[, POS := as.numeric(POS)]
   dt[, P := as.numeric(P)]
   dt[, SNP := as.character(SNP)]
   
-  #           ?  dt <- merge(dt, chr_lengths, by = "CHR", all.x = TRUE)
+  dt <- merge(dt, chr_lengths, by = "CHR", all.x = TRUE)
   
-  #                      
+  # Remove records without a recognized chromosome length.
   dt <- dt[!is.na(chr_len)]
   
-  #              ?1Mb
+  # Exclude the first and last 1 Mb of each chromosome.
   dt <- dt[POS > edge_bp & POS < (chr_len - edge_bp)]
   
-  #        chr_len
+  # Remove the temporary chromosome-length column.
   dt[, chr_len := NULL]
   
-  #     A1 / A2           ?BETA / T / AF1
+  # Standardize A1/A2 order and update BETA, T, and AF1 when alleles are flipped.
   dt <- standardize_alleles(dt)
   
-  #     SV    
+  # Define variant length from the longer allele.
   dt[, sv_len := pmax(nchar(A2), nchar(A1))]
   
-  #     set    
+  # Record the source call set.
   dt[, set := set_name]
   
-  #     ?set        ?       ?  out_file_all <- file.path(
+  out_file_all <- file.path(
     out_dir,
     paste0(set_name, ".remove_chr_edge_1Mb.standardized.fastGWA.tsv")
   )
@@ -139,7 +139,7 @@ process_gwas <- function(file_path, set_name, chr_lengths, edge_bp, out_dir) {
   fwrite(dt, out_file_all, sep = "\t")
   
   # ==========================================================
-  #        ?set        SV  ?SNV/indel
+  # Write separate SV and SNV/indel tables for each call set.
   # ==========================================================
   
   dt_sv <- dt[sv_len >= sv_cutoff]
@@ -174,9 +174,9 @@ prepare_for_merge <- function(dt, suffix) {
   
   merge_keys <- c("CHR", "POS", "A1", "A2", "sv_len")
   
-  #        ?set                 merge      
+  # Resolve duplicate merge keys within a call set.
   if (anyDuplicated(dt2, by = merge_keys)) {
-    message("    ?, suffix, "           CHR/POS/A1/A2/sv_len    ?P           ?)
+    message("Duplicate merge keys in ", suffix, "; retaining the row with the smallest P value.")
     setorder(dt2, P)
     dt2 <- unique(dt2, by = merge_keys)
   }
@@ -188,7 +188,8 @@ prepare_for_merge <- function(dt, suffix) {
 }
 
 # ============================================================
-# 3.           set          set        1Mb     ?# ============================================================
+# 3. Process each call set and apply the 1 Mb chromosome-edge filter.
+# ============================================================
 
 dt_list <- Map(
   f = function(file_path, set_name) {
@@ -205,7 +206,7 @@ dt_list <- Map(
 )
 
 # ============================================================
-# 4.              ?set       
+# 4. Combine call sets in long format.
 # ============================================================
 
 per_set_data <- rbindlist(dt_list, use.names = TRUE, fill = TRUE)
@@ -217,7 +218,7 @@ fwrite(
 )
 
 # ============================================================
-# 5.  ?SV / SNV-indel        ?set pooled    
+# 5. Split SV and SNV/indel results and retain significant records.
 # ============================================================
 
 sv_sites_by_set <- per_set_data[sv_len >= sv_cutoff]
@@ -235,7 +236,7 @@ fwrite(
   sep = "\t"
 )
 
-#           ?set        pooled     ?sv_sig_by_set <- sv_sites_by_set[P < sig_p]
+sv_sig_by_set <- sv_sites_by_set[P < sig_p]
 snv_indel_sig_by_set <- snv_indel_sites_by_set[P < sig_p]
 
 fwrite(
@@ -257,7 +258,7 @@ cat("SV Lambda, by-set pooled P:", round(lambda_sv_by_set, 4), "\n")
 cat("SNV/indel Lambda, by-set pooled P:", round(lambda_snv_indel_by_set, 4), "\n")
 
 # ============================================================
-# 6.     set          merge
+# 6. Merge call sets by standardized variant keys.
 #    key = CHR + POS + A1 + A2 + sv_len
 # ============================================================
 
@@ -275,7 +276,7 @@ merged_data <- Reduce(
 )
 
 # ============================================================
-# 7.     min_P       SNP    
+# 7. Calculate minimum P values and unified variant identifiers.
 # ============================================================
 
 p_cols <- grep("^P_", names(merged_data), value = TRUE)
@@ -301,13 +302,13 @@ fwrite(
 )
 
 # ============================================================
-# 8.  ?SV / SNV-indel      erged min_P    
+# 8. Split merged results into SV and SNV/indel tables.
 # ============================================================
 
 sv_sites_merged <- merged_data[sv_len >= sv_cutoff]
 snv_indel_sites_merged <- merged_data[sv_len < sv_cutoff]
 
-#        ?merged     SV  ?SNV/indel       
+# Write complete merged SV and SNV/indel tables.
 fwrite(
   sv_sites_merged,
   file.path(out_dir, "all_sets.merged_minP.SV_ge50bp.remove_chr_edge_1Mb.standardized.tsv"),
@@ -343,7 +344,7 @@ cat("SV Lambda, merged min_P:", round(lambda_sv_minP, 4), "\n")
 cat("SNV/indel Lambda, merged min_P:", round(lambda_snv_indel_minP, 4), "\n")
 
 # ============================================================
-# 9.     lambda      
+# 9. Summarize genomic inflation factors.
 # ============================================================
 
 lambda_summary <- data.table(
@@ -368,7 +369,8 @@ fwrite(
 )
 
 # ============================================================
-# 10.           ?# ============================================================
+# 10. Summarize variant counts.
+# ============================================================
 
 set_count_summary <- rbindlist(lapply(names(dt_list), function(set_name) {
   data.table(dataset = paste0(set_name, "_all"), n = nrow(dt_list[[set_name]]))

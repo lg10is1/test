@@ -8,7 +8,7 @@ for (pkg in required_packages) {
 
 #MC_* are TR count matrix (MC field of trgt output) for case and control. each row has $TRID_$motiforder as column 1 (using awk command). trgt output ensure same row number and order, allowing direct combination by columns.
 d_scz=fread("MC_SCZ",data.table=F)
-d_control=freead("MC_control",data.table=F)
+d_control=fread("MC_control",data.table=F)
 rownames(d_scz)=d_scz[,1]
 d_scz=d_scz[,-1]
 rownames(d_control)=d_control[,1]
@@ -98,7 +98,7 @@ spcontrol <- subset(triplets, triplets[, 2] <= ncol(d_control))
 spcase <- subset(triplets, triplets[, 2] > ncol(d_control))
 
 res=data.frame(ID=rownames(d_scz),ID1=rownames(d_scz)) 
-res=separate(res,ID1,into=c("posid","motifid"),sp=":")
+res=separate(res,ID1,into=c("posid","motifid"),sep=":")
 res$mintr_case=sczmin
 res$maxtr_case=sczmax
 res$mintr_control=controlmin
@@ -122,8 +122,8 @@ trc_control=table(spcontrol[which(spcontrol[,3]==(-1)),1])
 res[names(trc_control),"trc_control"]=trc_control
 
 annot=fread("trannot.txt",data.table=F)
-res$pos=annot[match(res$posid,annot$posid),"pos"),]
-res$cre=annot[match(res$posid,annot$posid),"cre"),]
+res$pos=annot$pos[match(res$posid,annot$posid)]
+res$cre=annot$cre[match(res$posid,annot$posid)]
 
 burden=data.frame()
 for(cre in unique(res$cre)){
@@ -146,7 +146,7 @@ for(cre in unique(res$cre)){
 
 for(cre in unique(res$pos)){
   if(is.na(cre)){next}
-  int=res[which(respos==cre),]
+  int=res[which(res$pos==cre),]
   trecon=sum(int$tre_control)
   trecase=sum(int$tre_case)
   model=binom.test(trecase, trecase+trecon, p = sum(res$tre_case,na.rm=T)/(sum(res$tre_case,na.rm=T)+sum(res$tre_control,na.rm=T)), alternative = "greater")
@@ -194,13 +194,13 @@ get_TRGT_info_fast <- function(TRID, sampleid, hapid, motifid) {
 
 
 exp=res[which(res$tre_case>0),c("maxtr_control","ID")]
-d=d_scz[rownames(exp),]
+d=d_scz[exp$ID,,drop=FALSE]
 expind=data.frame()
 
 for(i in 1:nrow(exp)){
   l=which(d[i,]>max(exp[i,1]*2,exp[i,1]+5))
   if(length(l)==0){next}
-  posid=rownames(d_scz)[i] #
+  posid=rownames(d)[i]
   pos=unlist(strsplit(posid,"_",fixed=T))
   start=as.numeric(pos[2])
   end=as.numeric(pos[3])
@@ -208,8 +208,8 @@ for(i in 1:nrow(exp)){
   fwrite(data.frame(chr=chr,start=start,end=end),"int.bed",sep="\t",col.names=F,scipen=20)
   system("liftOver int.bed ~/liftOver/grch38-chm13v2.chain new.bed unMapped -minMatch=0.5")
   int=data.frame()
-  fod (idx in l){
-    TRID=exp[i,2]
+  for (idx in l){
+    TRID=exp$ID[i]
     id=colnames(d)[idx]
     id=strsplit(id,"_",fixed=T)[[1]]
     hapid=as.numeric(gsub("H","",id[2]))
@@ -217,30 +217,31 @@ for(i in 1:nrow(exp)){
     motifid=as.numeric(strsplit(rownames(d_scz)[i],"_",fixed=T)[[1]][2])
     #purity and depth filtration
     info <- get_TRGT_info_fast(TRID, sampleid, hapid, motifid) 
+    if (is.null(info)) { next }
     #assembly filtration
-    command=paste(c("rb liftover --bed new.bed /path/",carrier,".1.align.paf > int.paf"),collapse="")
+    command=paste(c("rb liftover --bed new.bed /path/",sampleid,".1.align.paf > int.paf"),collapse="")
     system(command)
     seq1="failed"
-    int1=fread("int.paf",data.tabl=F)
-    if(nrow(int)>0){
+    int1=fread("int.paf",data.table=F)
+    if(nrow(int1)>0){
       int1=int1[,c(1,3,4,13,14,5)]
       fwrite(int1,"int1.bed",sep="\t",col.names=F,scipen=20)
-      command=paste(c("rb get-fasta --name --strand --bed int1.bed --fasta /path/",sample,".1.fa"),collapse="")
+      command=paste(c("rb get-fasta --name --strand --bed int1.bed --fasta /path/",sampleid,".1.fa"),collapse="")
       seq1=system(command,intern=T)
       seq1=paste(seq1[-1],collapse="")
     }
-    command=paste(c("rb liftover --bed new.bed /path/",carrier,".2.align.paf > int.paf"),collapse="")
+    command=paste(c("rb liftover --bed new.bed /path/",sampleid,".2.align.paf > int.paf"),collapse="")
     system(command)
     seq2="failed"
-    int1=fread("int.paf",data.tabl=F)
-    if(nrow(int)>0){
+    int1=fread("int.paf",data.table=F)
+    if(nrow(int1)>0){
       int1=int1[,c(1,3,4,13,14,5)]
       fwrite(int1,"int1.bed",sep="\t",col.names=F,scipen=20)
-      command=paste(c("rb get-fasta --name --strand --bed int1.bed --fasta /path/",sample,".2.fa"),collapse="")
+      command=paste(c("rb get-fasta --name --strand --bed int1.bed --fasta /path/",sampleid,".2.fa"),collapse="")
       seq2=system(command,intern=T)
       seq2=paste(seq2[-1],collapse="")
     }
-    int=rbind(int,data.frame(TRID=TRID,motifid=motifid,sample=sampleid,SD=info$SD,AP=info$AP,MC=info$MC),seq1=seq1,seq2=seq2)
+    int=rbind(int,data.frame(TRID=TRID,motifid=motifid,sample=sampleid,SD=info$SD,AP=info$AP,MC=info$MC,seq1=seq1,seq2=seq2))
   }
   expind=rbind(expind,int)
   print(i)

@@ -5,9 +5,9 @@ library(ggplot2)
 library(dplyr)
 library(cowplot)
 # ============================================================
-# 0.        GWAS        ?#                         
-#    sgv_sites =     ?small variants       ?SNV/indel < 50bp
-#    sv_sites  = SV >= 50bp
+# 0. Load GWAS results.
+#    sgv_sites contains SNVs and indels shorter than 50 bp.
+#    sv_sites contains structural variants of at least 50 bp.
 # ============================================================
 
 in_dir <- "/path/to/EOSCZ_PROJECT/figure_analysis/01.GWAS_figure.public"
@@ -38,7 +38,8 @@ sv_sites <- fread(
 )
 
 # ============================================================
-# 1.                            ?# ============================================================
+# 1. Validate required columns.
+# ============================================================
 
 required_cols <- c("CHR", "POS", "min_P")
 
@@ -46,11 +47,11 @@ missing_sgv <- setdiff(required_cols, names(sgv_sites))
 missing_sv <- setdiff(required_cols, names(sv_sites))
 
 if (length(missing_sgv) > 0) {
-  stop("sgv_sites     ? ", paste(missing_sgv, collapse = ", "))
+  stop("sgv_sites is missing required columns: ", paste(missing_sgv, collapse = ", "))
 }
 
 if (length(missing_sv) > 0) {
-  stop("sv_sites     ? ", paste(missing_sv, collapse = ", "))
+  stop("sv_sites is missing required columns: ", paste(missing_sv, collapse = ", "))
 }
 
 message("Loaded sgv_sites: ", nrow(sgv_sites))

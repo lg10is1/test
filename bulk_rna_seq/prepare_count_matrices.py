@@ -66,10 +66,10 @@ if len(samples) == 0:
 RE_GENE_ID=re.compile('gene_id "([^"]+)"')
 RE_GENE_NAME=re.compile('gene_name "([^"]+)"')
 RE_TRANSCRIPT_ID=re.compile('transcript_id "([^"]+)"')
-RE_COVERAGE=re.compile('cov "([\-\+\d\.]+)"')
+RE_COVERAGE=re.compile(r'cov "([\-\+\d\.]+)"')
 RE_STRING=re.compile(re.escape(opts.string))
 
-RE_GFILE=re.compile('\-G\s*(\S+)') #assume filepath without spaces..
+RE_GFILE=re.compile(r'\-G\s*(\S+)') #assume filepath without spaces..
 
 
 #####

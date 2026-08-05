@@ -31,4 +31,4 @@ bash run_gwas_workflow.sh [--start-at N] [--stop-after N] [--force]
 
 The runner delegates to `scripts/run_pipeline.sh`, which executes numbered steps with checkpoints. Numbered scripts can also be run individually in the order given in [docs/pipeline_steps.md](docs/pipeline_steps.md). `scripts/14_sgv_meqtl_disabled.R` is an intentional placeholder: SGV cis-meQTL is disabled in this workflow (SV-only meQTL policy).
 
-This directory retains its original [license](license).
+The repository is distributed under the [MIT License](../LICENSE).
