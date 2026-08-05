@@ -32,9 +32,7 @@ Supporting files:
 - `docs/workflow.md`: workflow relationships and execution order.
 - `docs/input_formats.md`: expected input schemas.
 - `docs/configuration.md`: configuration variables.
-- `docs/reproducibility.md`: version and provenance recording.
 - `examples/synthetic/`: synthetic inputs for format and command checks.
-- `software_versions.md`: detected software, packages, references, and databases.
 
 ## Workflow
 
@@ -129,6 +127,8 @@ Module-specific commands are documented in:
 
 Outputs include assemblies, alignment files, variant calls, genotype matrices, methylation matrices, expression phenotypes, association statistics, burden results, and figures. Direct outputs and scheduler logs to project-specific output directories; generated data and logs are excluded by `.gitignore`.
 
-## Citation and license
+## License
+Code in this repository is released under the MIT License.
 
-Complete `CITATION.cff.template` with the publication metadata before release. The `snv_sv_gwas` directory includes its original license; add a repository-wide license at the project root when selected.
+## Contact
+For questions or technical issues, please contact the corresponding author.
