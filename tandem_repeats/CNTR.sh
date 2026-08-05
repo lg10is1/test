@@ -8,7 +8,7 @@ cd repeatmasker/$id
 
 ~/ULTRA/ultra -o ultra.tsv $file_path --max_split -1 -t 5
 tail -n +2 ultra.tsv | awk 'BEGIN{OFS="\t"}  $4 > 1 && $5 > 10 {print $1,$2,$3,$6,$4,$7}' > ultra.bed
-rb liftover --bed ultra.bed ~/zju/paf/$id.v0.9.align.paf -q > chm13.bed
+rb liftover --bed ultra.bed ./$id.v0.9.align.paf -q > chm13.bed
 #Rscript ~/repeatmasker/reformatbed.r
 awk 'BEGIN{OFS="\t"}{print $1,$3,$4,$5,$6,$8,$9,$13}' chm13.bed > int.bed
 mv int.bed chm13.bed

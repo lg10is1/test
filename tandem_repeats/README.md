@@ -21,4 +21,4 @@ Expected inputs in the working directory:
 - `lord.RData`: list of TR identifiers per chunk
 - `sample.info`: sample table; column 2 is recoded to `SCZ`
 
-For each TR, a Firth logistic regression of disease status on dosage is fit. The same code was used for the NGS and TGS TR matrices.
+For each TR, a logistic regression of disease status on dosage is fit. The same code was used for the SRS and LRS TR matrices.
